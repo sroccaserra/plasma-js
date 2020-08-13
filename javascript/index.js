@@ -10,16 +10,37 @@ window.requestAnimFrame = (function(){
     };
 })();
 
+const w = 64;
+const h = 64;
+const pixelSize = 9;
+
+let counter = 0;
+
+function get2DContext(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  canvas.width = w;
+  canvas.height = h;
+  canvas.style = "image-rendering: -moz-crisp-edges; image-rendering: -o-crisp-edges; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;";
+  canvas.style.width = `${w*pixelSize}px`;
+  canvas.style.height = `${h*pixelSize}px`;
+  context = canvas.getContext( '2d' );
+  context.imageSmoothingEnabled = false;
+  return context;
+}
+
+function getTimeMs() {
+  return window.performance.now();
+}
+
 function drawFrame(context, plasmaMap, colorMap) {
   const time = new Date().getTime() * 0.003;
 
   const w = context.canvas.width;
   const h = context.canvas.height;
-  context.imageSmoothingEnabled = false;
-  context.mozImageSmoothingEnabled = false
   const imageData = context.getImageData(0, 0, w, h);
   const px = imageData.data;
 
+  const start = getTimeMs();
   const kx = w/h;
   for(let y = 0; y < h; y++) {
     const yy = y/h - 0.5;
@@ -29,18 +50,22 @@ function drawFrame(context, plasmaMap, colorMap) {
       colorMap(px, (y*w + x)*4, v);
     }
   }
+  const end = getTimeMs();
+  if (counter < 100) {
+    console.log(end - start);
+  }
   context.putImageData(imageData, 0, 0);
+  counter += 1;
 }
 
 function drawStill(canvasId, plasmaMap, colorMap) {
-  const canvas = document.getElementById(canvasId);
-  const context = canvas.getContext( '2d' );
+  const context = get2DContext(canvasId);
   drawFrame(context, plasmaMap, colorMap);
 }
 
 function drawAnimated(canvasId, plasmaMap, colorMap) {
-  const canvas = document.getElementById(canvasId);
-  const context = canvas.getContext( '2d' );
+  const context = get2DContext(canvasId);
+  console.log(`${context.canvas.width}x${context.canvas.height}`);
 
   function animate() {
     drawFrame(context, plasmaMap, colorMap);
